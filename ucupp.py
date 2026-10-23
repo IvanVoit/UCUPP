@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
 UCUPP - Ultimate Common User Passwords Profiler
-Generador exhaustivo de diccionarios de contraseñas basado en datos
-personales, para uso EXCLUSIVO en laboratorios propios de ciberseguridad
-(máquinas virtuales de prueba, usuarios ficticios, auditorías autorizadas).
+An exhaustive password wordlist generator based on personal data, for
+EXCLUSIVE use in your own cybersecurity labs (test virtual machines,
+fictional users, authorized audits).
 
-A diferencia de CUPP clásico, este script SÍ combina entre sí:
-  - palabras base (nombre, apellido, nickname, mascota, hijo, pareja, etc.)
-  - sus variantes en leetspeak
-  - sus variantes con mayúscula inicial / todo mayúsculas / todo minúsculas
-  - fragmentos de cada fecha (día, mes, año completo, año corto)
-  - separadores entre palabra y número (nada, "_", "-", ".")
-  - caracteres especiales opcionales al final
+Unlike classic CUPP, this script DOES combine with each other:
+  - base words (first name, surname, nickname, pet, child, partner, etc.)
+  - their leetspeak variants
+  - their casing variants (lowercase / Capitalized / UPPERCASE)
+  - fragments of each date (day, month, full year, short year)
+  - separators between word and number ("", "_", "-", ".")
+  - optional special characters at the end
 
-Uso:
+Usage:
     python3 ucupp.py
-    (te irá preguntando los datos, igual que CUPP)
+    (it will interactively ask you for the data, just like CUPP)
 
-Repositorio: https://github.com/TU_USUARIO/ucupp
-Licencia: MIT
+Repository: https://github.com/YOUR_USERNAME/ucupp
+License: MIT
 """
 
 import itertools
@@ -38,32 +38,32 @@ SPECIAL_CHARS = ["", "!", "#", "@", "*"]
 
 
 def leet_variants(word, max_variants=64):
-    """Genera variantes leet de una palabra, limitando la cantidad
-    para no explotar combinatoriamente (una palabra larga con muchas
-    letras sustituibles podría generar miles de variantes ella sola)."""
+    """Generates leetspeak variants of a word, capping the amount so a long
+    word with many substitutable letters doesn't explode combinatorially on
+    its own."""
     word = word.lower()
     options_per_char = []
     for ch in word:
         options_per_char.append(LEET_MAP.get(ch, [ch]))
 
     variants = set()
-    # producto completo de sustituciones posibles
+    # full product of possible substitutions
     for combo in itertools.product(*options_per_char):
         variants.add("".join(combo))
         if len(variants) >= max_variants:
             break
-    variants.add(word)  # aseguramos que la original está incluida
+    variants.add(word)  # make sure the original is always included
     return variants
 
 
 def case_variants(word):
-    """minúscula, Mayúscula inicial, MAYÚSCULA completa."""
+    """lowercase, Capitalized, UPPERCASE."""
     return {word.lower(), word.capitalize(), word.upper()}
 
 
 def date_fragments(date_str):
-    """date_str en formato DDMMYYYY. Devuelve una lista de fragmentos
-    útiles: dd, mm, yyyy, yy, ddmm, mmyyyy, yyyy, ddmmyyyy, etc."""
+    """date_str in DDMMYYYY format. Returns a list of useful fragments:
+    dd, mm, yyyy, yy, ddmm, mmyyyy, yyyymmdd, etc."""
     if not date_str or len(date_str) != 8 or not date_str.isdigit():
         return []
     dd, mm, yyyy = date_str[0:2], date_str[2:4], date_str[4:8]
@@ -81,19 +81,19 @@ def ask(prompt):
 
 
 def collect_words():
-    """Recoge palabras base del usuario (como CUPP, pero puedes meter
-    tantas como quieras)."""
-    print("\n[+] Introduce los datos de la víctima (deja en blanco si no aplica)\n")
+    """Collects base words from the user (like CUPP, but you can add as
+    many as you want)."""
+    print("\n[+] Enter the target's information (leave blank if not applicable)\n")
     fields = {
-        "Nombre": ask("> Nombre: "),
-        "Apellido": ask("> Apellido: "),
+        "First name": ask("> First name: "),
+        "Surname": ask("> Surname: "),
         "Nickname": ask("> Nickname: "),
-        "Mascota": ask("> Nombre mascota: "),
-        "Hijo/a": ask("> Nombre hijo/a: "),
-        "Pareja": ask("> Nombre pareja: "),
-        "Empresa": ask("> Empresa: "),
+        "Pet": ask("> Pet's name: "),
+        "Child": ask("> Child's name: "),
+        "Partner": ask("> Partner's name: "),
+        "Company": ask("> Company name: "),
     }
-    extra = ask("> Palabras clave extra, separadas por coma: ")
+    extra = ask("> Extra keywords, comma-separated: ")
     extra_words = [w.strip() for w in extra.split(",") if w.strip()]
 
     words = [v for v in fields.values() if v] + extra_words
@@ -101,9 +101,9 @@ def collect_words():
 
 
 def collect_dates():
-    print("\n[+] Fechas (formato DDMMYYYY, deja en blanco si no aplica)\n")
+    print("\n[+] Dates (DDMMYYYY format, leave blank if not applicable)\n")
     dates = []
-    for label in ["Nacimiento víctima", "Nacimiento pareja", "Nacimiento hijo/a"]:
+    for label in ["Target's birthdate", "Partner's birthdate", "Child's birthdate"]:
         d = ask(f"> {label}: ")
         if d:
             dates.append(d)
@@ -113,7 +113,7 @@ def collect_dates():
 def generate(words, dates, use_leet, use_numbers, max_total=800_000):
     all_words = set()
 
-    # 1. Variantes de cada palabra base: minúscula/mayúscula + leet opcional
+    # 1. Variants of each base word: lowercase/uppercase + optional leet
     base_variants = set()
     for w in words:
         for cw in case_variants(w):
@@ -125,12 +125,12 @@ def generate(words, dates, use_leet, use_numbers, max_total=800_000):
 
     all_words |= base_variants
 
-    # 2. Fragmentos de todas las fechas
+    # 2. Fragments of all dates
     date_frags = set()
     for d in dates:
         date_frags |= set(date_fragments(d))
 
-    # 3. Combinación palabra + separador + fragmento_fecha (+ al revés)
+    # 3. Combination word + separator + date_fragment (+ reversed order)
     combined = set()
     if use_numbers and date_frags:
         for w in base_variants:
@@ -147,8 +147,8 @@ def generate(words, dates, use_leet, use_numbers, max_total=800_000):
 
     all_words |= combined
 
-    # 4. Añadir carácter especial final a una muestra (si no, el archivo
-    # se dispara demasiado): lo aplicamos sobre las combinaciones ya hechas
+    # 4. Add a trailing special character on top of the already-combined
+    # results (not just on standalone words), stopping once we hit the limit
     final_set = set(all_words)
     if len(final_set) < max_total:
         for w in list(all_words):
@@ -166,31 +166,31 @@ def generate(words, dates, use_leet, use_numbers, max_total=800_000):
 def main():
     print("=" * 60)
     print(" UCUPP - Ultimate Common User Passwords Profiler")
-    print(" SOLO para uso en tus propios laboratorios de pruebas")
+    print(" FOR USE IN YOUR OWN TESTING LABS ONLY")
     print("=" * 60)
 
     words = collect_words()
     if not words:
-        print("[-] No has introducido ninguna palabra base. Saliendo.")
+        print("[-] No base words entered. Exiting.")
         sys.exit(1)
 
     dates = collect_dates()
 
-    use_leet = ask("> ¿Activar leetspeak? (Y/n): ").lower() != "n"
-    use_numbers = ask("> ¿Combinar con fechas? (Y/n): ").lower() != "n"
-    max_total_str = ask("> Límite máximo de combinaciones [800000]: ")
+    use_leet = ask("> Enable leetspeak? (Y/n): ").lower() != "n"
+    use_numbers = ask("> Combine words with dates? (Y/n): ").lower() != "n"
+    max_total_str = ask("> Maximum number of combinations [800000]: ")
     max_total = int(max_total_str) if max_total_str.isdigit() else 800_000
 
-    print("\n[+] Generando combinaciones, esto puede tardar unos segundos...")
+    print("\n[+] Generating combinations, this may take a few seconds...")
     result = generate(words, dates, use_leet, use_numbers, max_total)
 
-    out_file = ask("> Nombre del archivo de salida [combogen.txt]: ") or "combogen.txt"
+    out_file = ask("> Output file name [ucupp_output.txt]: ") or "ucupp_output.txt"
     with open(out_file, "w") as f:
         for w in sorted(result):
             f.write(w + "\n")
 
-    print(f"\n[+] Hecho. Se generaron {len(result)} combinaciones.")
-    print(f"[+] Guardado en: {out_file}")
+    print(f"\n[+] Done. Generated {len(result)} combinations.")
+    print(f"[+] Saved to: {out_file}")
 
 
 if __name__ == "__main__":
