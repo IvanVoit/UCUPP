@@ -17,7 +17,7 @@ Usage:
     python3 ucupp.py
     (it will interactively ask you for the data, just like CUPP)
 
-Repository: https://github.com/YOUR_USERNAME/ucupp
+Repository: https://github.com/ivanvoit/ucupp
 License: MIT
 """
 
@@ -122,6 +122,7 @@ def generate(words, dates, use_leet, use_numbers, max_total=800_000):
             for lv in leet_variants(w):
                 base_variants.add(lv)
                 base_variants.add(lv.capitalize())
+                base_variants.add(lv.upper())
 
     all_words |= base_variants
 
@@ -146,6 +147,18 @@ def generate(words, dates, use_leet, use_numbers, max_total=800_000):
                 break
 
     all_words |= combined
+
+    # 3b. Full-uppercase version of every combined word+date string (not
+    # just the uppercase of the base word alone), so e.g. "john-1990"
+    # also yields "JOHN-1990".
+    upper_combined = set()
+    if len(all_words) < max_total:
+        for w in combined:
+            upper_combined.add(w.upper())
+            if len(all_words) + len(upper_combined) >= max_total:
+                break
+
+    all_words |= upper_combined
 
     # 4. Add a trailing special character on top of the already-combined
     # results (not just on standalone words), stopping once we hit the limit
